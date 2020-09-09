@@ -12,7 +12,7 @@ The pitch_transposer python script takes the mp3 files inside the "in" folder an
 
 # License of this Repository
 
-+ gpl-2.0
++ gpl-2.0 (see LICENSE)
 
 ## Ignored files
 

@@ -27,26 +27,27 @@ def transform(in_file, out_file, in_format, out_format):
     #export / save pitch changed sound
     hipitch_sound.export(out_file, format=out_format)
     
-    if in_format in "mp3":
+    if in_format in "mp3" and out_format in "mp3":
         #copy meta-data
         audio_in = EasyID3(in_file)
         print(audio_in)
         audio_out = EasyID3(out_file)
-        if 'title' in audio_in:
-            audio_out['title'] = audio_in['title']
-        if 'artist' in audio_in:
-            audio_out['artist'] = audio_in['artist']
-        if 'album' in audio_in:
-            audio_out['album'] = audio_in['artist']
-        if 'composer' in audio_in:
-            audio_out['composer'] = audio_in['composer']
-        if 'year' in audio_in:
-            audio_out['year'] = audio_in['year']
+        for key in audio_in:
+            audio_out[key] = audio_in[key]
         if audio_out:
             audio_out.save()
     
     print('Wrote "' + out_file + '" in 432Hz.')
+
+def formatOk(f):
+    return f.endswith('.mp3') or f.endswith('.MP3') or f.endswith('.waf') or f.endswith('.WAF')
     
+def getFormat(f):
+    if f.endswith('.mp3') or f.endswith('.MP3'):
+        return "mp3"
+    else:
+        return "waf"
+
 import os
 import shutil
 from shutil import copy2
@@ -58,9 +59,9 @@ listOfFiles = list()
 for (dirpath, dirnames, filenames) in os.walk('in' + sep):
     listOfFiles += [os.path.join(dirpath, file) for file in filenames]
 
-listOfMP3Files = [f for f in listOfFiles if (f.endswith('.mp3') and not ('432' in f))]
-listOfOtherFiles = [f for f in listOfFiles if (('432' in f) or not f.endswith('.mp3'))]
-print('MP3 files (except 432Hz files): ' + str(listOfMP3Files))
+listOfSoundFiles = [f for f in listOfFiles if (formatOk(f) and not ('432' in f))]
+listOfOtherFiles = [f for f in listOfFiles if (('432' in f) or not formatOk(f))]
+print('Sound (mp3, wav) files (except 432Hz files): ' + str(listOfSoundFiles))
 print('Other files: ' + str(listOfOtherFiles))
 
 # creating necessary directories
@@ -75,14 +76,15 @@ for filename in listOfOutFiles:
 
 # transform files
 count = 0
-for mp3File in listOfMP3Files:
-    outFile = mp3File.replace('in' + sep, 'out' + sep, 1)
+for soundFile in listOfSoundFiles:
+    outFile = soundFile.replace('in' + sep, 'out' + sep, 1)
     # ignore already completed files from earlier runs
     if not os.path.exists(outFile):
-        transform(mp3File, outFile, "mp3", "mp3")
+        soundFormat = getFormat(soundFile)
+        transform(soundFile, outFile, soundFormat, soundFormat)
         count = count + 1
         
-print('Transformed ' + str(count) + ' of ' + str(len(listOfMP3Files)) + ' mp3 files from 440Hz to 432Hz.')
+print('Transformed ' + str(count) + ' of ' + str(len(listOfSoundFiles)) + ' sound files from 440Hz to 432Hz.')
 
 # copy non-MP3 and 432Hz files
 count = 0

@@ -1,4 +1,4 @@
-The pitch_transposer python script takes the mp3 files inside the "in" folder and converts them from 440Hz to 432Hz, saving the resulting files into the "out" folder.
+The pitch_transposer python script takes the sound files (mp3 and waf) inside the "in" folder and converts them from 440Hz to 432Hz, saving the resulting files into the "out" folder.
 
 ## Necessary Libraries
 
@@ -16,4 +16,4 @@ The pitch_transposer python script takes the mp3 files inside the "in" folder an
 
 ## Ignored files
 
-Every file which contains "432" in its path or is not mp3 is just copied and not converted.
+Every file which contains "432" in its path or has not a valid format (mp3 and waf are valid) is just copied and not converted.

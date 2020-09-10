@@ -2,6 +2,7 @@
 from pydub import AudioSegment # see https://github.com/jiaaro/pydub
 from pydub.playback import play
 from mutagen.easyid3 import EasyID3 # see https://mutagen.readthedocs.io/en/latest/index.html
+import mutagen.id3
 
 def transform(in_file, out_file, in_format, out_format):
     # see https://stackoverflow.com/questions/43963982/python-change-pitch-of-wav-file
@@ -29,13 +30,16 @@ def transform(in_file, out_file, in_format, out_format):
     
     if in_format in "mp3" and out_format in "mp3":
         #copy meta-data
-        audio_in = EasyID3(in_file)
-        print(audio_in)
-        audio_out = EasyID3(out_file)
-        for key in audio_in:
-            audio_out[key] = audio_in[key]
-        if audio_out:
-            audio_out.save()
+        try:
+            audio_in = EasyID3(in_file)
+            print(audio_in)
+            audio_out = EasyID3(out_file)
+            for key in audio_in:
+                audio_out[key] = audio_in[key]
+            if audio_out:
+                audio_out.save()
+        except mutagen.id3.ID3NoHeaderError:
+            print("No id3 header found, ignored.")
     
     print('Wrote "' + out_file + '" in 432Hz.')
 

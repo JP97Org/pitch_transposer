@@ -52,11 +52,29 @@ def getFormat(f):
     else:
         return "waf"
 
+import sys
 import os
 import shutil
 from shutil import copy2
 
 sep = os.path.sep
+
+def transformSoundFile(soundFile):
+    outFile = soundFile.replace('in' + sep, 'out' + sep, 1)
+    # ignore already completed files from earlier runs
+    if not os.path.exists(outFile):
+        soundFormat = getFormat(soundFile)
+        transform(soundFile, outFile, soundFormat, soundFormat)
+        return 1
+    return 0
+ 
+def copyOtherFile(otherFile):
+    outFile = otherFile.replace('in' + sep, 'out' + sep, 1)
+    # ignore already completed files from earlier runs
+    if not os.path.exists(outFile):
+        shutil.copy2(otherFile, outFile)
+        return 1
+    return 0
 
 #find files and convert them
 listOfFiles = list()
@@ -81,22 +99,31 @@ for filename in listOfOutFiles:
 # transform files
 count = 0
 for soundFile in listOfSoundFiles:
-    outFile = soundFile.replace('in' + sep, 'out' + sep, 1)
-    # ignore already completed files from earlier runs
-    if not os.path.exists(outFile):
-        soundFormat = getFormat(soundFile)
-        transform(soundFile, outFile, soundFormat, soundFormat)
-        count = count + 1
+    try:
+        count = count + transformSoundFile(soundFile)
+    except KeyboardInterrupt as exitExc:
+        outFile = soundFile.replace('in' + sep, 'out' + sep, 1)
+        if os.path.exists(outFile):
+            os.remove(outFile)
+        count = count + transformSoundFile(soundFile)
+        print('Transformed ' + str(count) + ' of ' + str(len(listOfSoundFiles)) + ' sound files from 440Hz to 432Hz.')
+        sys.exit(0)
         
 print('Transformed ' + str(count) + ' of ' + str(len(listOfSoundFiles)) + ' sound files from 440Hz to 432Hz.')
 
 # copy non-MP3 and 432Hz files
 count = 0
 for otherFile in listOfOtherFiles:
-    outFile = otherFile.replace('in' + sep, 'out' + sep, 1)
-    # ignore already completed files from earlier runs
-    if not os.path.exists(outFile):
-        shutil.copy2(otherFile, outFile)
-        count = count + 1
+    try:
+        outFile = otherFile.replace('in' + sep, 'out' + sep, 1)
+        count = count + copyOtherFile(otherFile)
+    except KeyboardInterrupt as exitExc:
+        outFile = otherFile.replace('in' + sep, 'out' + sep, 1)
+        if os.path.exists(outFile):
+            os.remove(outFile)
+        count = count + copyOtherFile(otherFile)
+        print('last copied file: ' + outFile)
+        print('Copied ' + str(count) + ' of ' + str(len(listOfOtherFiles)) + ' non-mp3 or 432Hz files.')
+        sys.exit(0)
     
 print('Copied ' + str(count) + ' of ' + str(len(listOfOtherFiles)) + ' non-mp3 or 432Hz files.')
